@@ -37,7 +37,7 @@ A package can be published to a custom _package repository_ by overwriting the
 ```yaml
 name: mypkg
 version: 1.0.0
-publish_to: <hosted-url>
+publish_to: <hosted-url>c
 ```
 
 When taking dependency upon a package from a custom _package repository_ the

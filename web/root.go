@@ -1,6 +1,7 @@
 package web
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -8,7 +9,7 @@ import (
 
 func init() {
 	RegisterEndpoint(
-		func(web *echo.Echo) {
+		func(_ context.Context, web *echo.Echo) {
 			web.GET("/", func(c echo.Context) error {
 				return c.String(http.StatusOK, "Ok!")
 			})

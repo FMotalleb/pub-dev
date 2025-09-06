@@ -13,10 +13,13 @@ import (
 	"github.com/fmotalleb/pub-dev/config"
 )
 
-var server = echo.New()
+var (
+	routes = make([]func(context.Context, *echo.Echo), 0)
+	server = echo.New()
+)
 
-func RegisterEndpoint(register func(*echo.Echo)) {
-	register(server)
+func RegisterEndpoint(register func(context.Context, *echo.Echo)) {
+	routes = append(routes, register)
 }
 
 func init() {
@@ -40,6 +43,9 @@ func Start(ctx context.Context) error {
 		BaseContext: func(_ net.Listener) context.Context {
 			return ctx
 		},
+	}
+	for _, r := range routes {
+		r(ctx, server)
 	}
 	if err := server.Start(cfg.HTTPListenAddr); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err

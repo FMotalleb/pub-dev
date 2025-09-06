@@ -133,7 +133,7 @@ func writeSpecData(spec *pub.Spec, l *zap.Logger, c echo.Context, finalRoot stri
 	raw := make(map[string]any)
 	raw["pubspec"] = spec.Raw
 	raw["version"] = spec.Version
-	raw["archive_url"] = cfg.BaseURL + path.Join("storage", "packages", spec.Name+"-"+spec.Version+".tar.gz")
+	raw["archive_url"] = cfg.BaseURL + path.Join("storage", "packages", spec.Name, spec.Version, "package.tar.gz")
 	data, err := os.ReadFile(finalPath)
 	if err != nil {
 		return err

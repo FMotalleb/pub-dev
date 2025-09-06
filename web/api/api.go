@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+
 	"github.com/labstack/echo/v4"
 )
 
@@ -10,7 +12,7 @@ func RegisterEndpoint(register func(*echo.Group)) {
 	setup = append(setup, register)
 }
 
-func Setup(web *echo.Echo) {
+func Setup(_ context.Context, web *echo.Echo) {
 	api := web.Group("api/")
 	for _, e := range setup {
 		e(api)

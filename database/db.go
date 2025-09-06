@@ -3,7 +3,7 @@ package database
 import (
 	"gorm.io/gorm"
 
-	"github.com/fmotalleb/north_outage/database/driver"
+	"github.com/fmotalleb/pub-dev/database/driver"
 )
 
 var rootDB *gorm.DB

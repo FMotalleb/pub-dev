@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/fmotalleb/north_outage/config"
-
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/fmotalleb/pub-dev/config"
 )
 
 var server = echo.New()

@@ -25,8 +25,8 @@ import (
 	"github.com/fmotalleb/go-tools/sysctx"
 	"github.com/spf13/cobra"
 
-	"github.com/golang-templates/seed/config"
-	"github.com/golang-templates/seed/service"
+	"github.com/fmotalleb/pub-dev/config"
+	"github.com/fmotalleb/pub-dev/service"
 )
 
 // rootCmd represents the base command when called without any subcommands

@@ -1,10 +1,10 @@
 # Go Repository Template
 
 [![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
-[![Go Reference](https://pkg.go.dev/badge/github.com/golang-templates/seed.svg)](https://pkg.go.dev/github.com/golang-templates/seed)
+[![Go Reference](https://pkg.go.dev/badge/github.com/fmotalleb/pub-dev.svg)](https://pkg.go.dev/github.com/fmotalleb/pub-dev)
 [![go.mod](https://img.shields.io/github/go-mod/go-version/golang-templates/seed)](go.mod)
 [![LICENSE](https://img.shields.io/github/license/golang-templates/seed)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/golang-templates/seed)](https://goreportcard.com/report/github.com/golang-templates/seed)
+[![Go Report Card](https://goreportcard.com/badge/github.com/fmotalleb/pub-dev)](https://goreportcard.com/report/github.com/fmotalleb/pub-dev)
 [![Codecov](https://codecov.io/gh/golang-templates/seed/branch/main/graph/badge.svg)](https://codecov.io/gh/golang-templates/seed)
 
 ⭐ `Star` this repository if you find it valuable and worth maintaining.

@@ -1,4 +1,4 @@
-module github.com/golang-templates/seed
+module github.com/fmotalleb/pub-dev
 
 go 1.25.0
 

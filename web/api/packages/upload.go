@@ -100,13 +100,13 @@ func handleFinalize(c echo.Context) error {
 	cfg := config.GetForce(c.Request().Context())
 	finalRoot := filepath.Join(cfg.StoragePath, spec.Name, spec.Version)
 
-	if err := os.MkdirAll(finalRoot, directoryMakePermission); err != nil {
+	if err = os.MkdirAll(finalRoot, directoryMakePermission); err != nil {
 		l.Error("failed to create final directory", zap.Error(err))
 		return c.String(http.StatusInternalServerError, "server error")
 	}
 
 	finalPath := filepath.Join(finalRoot, "package.tar.gz")
-	if err := moveFile(tempPath, finalPath); err != nil {
+	if err = moveFile(tempPath, finalPath); err != nil {
 		l.Error("failed to move package", zap.Error(err))
 		return c.String(http.StatusInternalServerError, "server error")
 	}

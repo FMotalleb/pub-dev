@@ -121,16 +121,8 @@ func handleFinalize(c echo.Context) error {
 			},
 		})
 	}
-	err = pub.RecalculateMetadata(c.Request().Context(), packageDir)
-	if err != nil {
-		l.Error("failed to generate package listing data", zap.Error(err))
-		return c.JSON(http.StatusOK, map[string]any{
-			"error": map[string]any{
-				"code":    2,
-				"message": "failed to generate package listing data",
-			},
-		})
-	}
+	pub.WritePackageMeta(c.Request().Context(), l, packageDir)
+
 	return c.JSON(http.StatusOK, map[string]any{
 		"success": map[string]string{
 			"message": "package published successfully",

@@ -1,2 +1,10 @@
 http_listen = ":8080"
 base_url = "http://127.0.0.1:8080/"
+
+[[auth]]
+path = [
+  "/api/packages/versions/new",
+]
+token = [
+  "hDwN3pH4C4ngDiBMRgQ3ghElr",
+]

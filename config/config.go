@@ -12,4 +12,11 @@ type Config struct {
 
 	DatabaseConnection string `mapstructure:"database" env:"DATABASE" default:"sqlite://storage/packages.db" validate:"required,uri"`
 	StoragePath        string `mapstructure:"storage" default:"./storage/packages"`
+
+	Auth []AuthRule `mapstructure:"auth"`
+}
+
+type AuthRule struct {
+	BasePath []string `mapstructure:"path"`
+	Tokens   []string `mapstructure:"token"`
 }

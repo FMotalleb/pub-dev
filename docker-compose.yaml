@@ -1,0 +1,28 @@
+services:
+  server:
+    image: fmotalleb/pub-dev:0.0.1
+    command: ["-c", "/config.toml"]
+    volumes:
+      - "./storage:/storage"
+    restart: always
+    configs:
+      - source: pubdev_conf
+        target: /config.toml
+
+configs:
+  pubdev_conf:
+    content: |-
+      http_listen = ":8080"
+      base_url = "https://your local domain/"
+      pub_storage = "/storage/pub"
+      [[auth]]
+      path = [
+        "/api/packages/versions/new",
+      ]
+      token = [
+        "your token here",
+      ]
+
+networks:
+  webserver_bridge:
+    external: true

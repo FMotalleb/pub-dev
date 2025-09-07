@@ -17,7 +17,7 @@ func SetupRoutes(ctx context.Context, e *echo.Echo) {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Ok!")
 	})
-	e.Static("storage/packages", cfg.StoragePath)
+	e.Static("storage/packages", cfg.PubStorage)
 
 	// API routes
 	api := e.Group("/api")

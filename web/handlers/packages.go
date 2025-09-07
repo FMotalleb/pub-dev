@@ -58,11 +58,14 @@ func GetPackageInfo(ctx echo.Context) error {
 	if p == "" {
 		return ctx.String(http.StatusNotFound, "package name is empty")
 	}
-	listing := path.Join(cfg.StoragePath, p, "listing.json")
+	listing := path.Join(cfg.PubStorage, p, "listing.json")
 
 	var raw ListingResponse
 	err := utils.ReadJSONTemplate(listing, &raw, *cfg)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return ctx.NoContent(http.StatusOK)
+		}
 		l.Error("failed to parse json for package", zap.String("path", listing), zap.Error(err))
 		return ctx.String(http.StatusInternalServerError, "internal server error")
 	}
@@ -128,7 +131,7 @@ func HandleFinalize(c echo.Context) error {
 	}
 
 	cfg := config.GetForce(c.Request().Context())
-	packageDir := filepath.Join(cfg.StoragePath, spec.Name)
+	packageDir := filepath.Join(cfg.PubStorage, spec.Name)
 	finalDir := filepath.Join(packageDir, spec.Version)
 
 	if err = os.MkdirAll(finalDir, directoryMakePermission); err != nil {

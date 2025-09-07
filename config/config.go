@@ -10,8 +10,7 @@ type Config struct {
 
 	BaseURL string `mapstructure:"base_url" env:"BASE_URL"`
 
-	DatabaseConnection string `mapstructure:"database" env:"DATABASE" default:"sqlite://storage/packages.db" validate:"required,uri"`
-	StoragePath        string `mapstructure:"storage" default:"./storage/packages"`
+	PubStorage string `mapstructure:"pub_storage" default:"./storage/pub"`
 
 	Auth []AuthRule `mapstructure:"auth"`
 }

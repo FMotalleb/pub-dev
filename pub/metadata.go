@@ -13,6 +13,22 @@ import (
 	"github.com/fmotalleb/pub-dev/utils"
 )
 
+const filePermission = 0o600
+
+type Package struct {
+	Name     string            `json:"name"`
+	Latest   *PackageVersion   `json:"latest"`
+	Versions []*PackageVersion `json:"versions"`
+}
+
+type PackageVersion struct {
+	Version       string         `json:"version"`
+	Pubspec       map[string]any `json:"pubspec"`
+	ArchiveURL    string         `json:"archive_url"`
+	ArchiveSHA256 string         `json:"archive_sha256"`
+	Published     time.Time      `json:"published"`
+}
+
 func RecalculateMetadata(ctx context.Context, storage string) error {
 	l := log.Of(ctx).
 		Named("RecalculateMetadata").
@@ -27,94 +43,62 @@ func RecalculateMetadata(ctx context.Context, storage string) error {
 		if !p.IsDir() {
 			continue
 		}
-		p := path.Join(storage, p.Name())
-		WritePackageMeta(ctx, l, p)
+		pPath := path.Join(storage, p.Name())
+		pkg, err := ReadPackage(ctx, pPath)
+		if err != nil {
+			l.Error("failed to read package", zap.Error(err), zap.String("package", p.Name()))
+			continue
+		}
+		if err := pkg.WriteMeta(pPath); err != nil {
+			l.Error("failed to write package metadata", zap.Error(err), zap.String("package", p.Name()))
+		}
 	}
 	return nil
 }
 
-func WritePackageMeta(ctx context.Context, l *zap.Logger, p string) {
-	pl := l.With(zap.String("package", p))
-	meta, err := buildMetaData(ctx, p)
-	if err != nil {
-		pl.Error("failed to generate metadata for package, skipping", zap.Error(err))
-		return
-	}
-	targetPath := path.Join(p, "listing.json")
-	target, err := os.Create(targetPath)
-	if err != nil {
-		pl.Error("failed to create listing.json for package", zap.Error(err))
-		return
-	}
-	metaJSON, err := json.Marshal(meta)
-	if err != nil {
-		pl.Error("failed to convert hashmap to json for package", zap.Error(err))
-		return
-	}
-	_, err = target.Write(metaJSON)
-	if err != nil {
-		pl.Error("failed to write json to list file for package", zap.Error(err))
-		return
-	}
-}
-
-func buildMetaData(ctx context.Context, pDir string) (map[string]any, error) {
+func ReadPackage(ctx context.Context, pDir string) (*Package, error) {
 	l := log.Of(ctx).
-		Named("buildMetadata").
+		Named("ReadPackage").
 		With(zap.String("package", pDir))
-	var directories []os.DirEntry
-	var err error
-	if directories, err = os.ReadDir(pDir); err != nil {
+	versions, err := os.ReadDir(pDir)
+	if err != nil {
 		l.Error("failed to read package directory", zap.Error(err))
 		return nil, err
 	}
-	raw := make(map[string]any, 0)
-	raw["name"] = path.Base(pDir)
-	versions := make([]map[string]any, 0, len(directories))
-	var latest map[string]any
-	for _, d := range directories {
-		if !d.IsDir() {
+
+	pkg := &Package{
+		Name:     path.Base(pDir),
+		Versions: make([]*PackageVersion, 0, len(versions)),
+	}
+
+	for _, v := range versions {
+		if !v.IsDir() {
 			continue
 		}
-		data := make(map[string]any, 0)
-		verData := path.Join(pDir, d.Name(), "package.json")
-		if err := utils.ReadJSON(verData, &data); err != nil {
-			l.Error("failed to read package version data", zap.Error(err), zap.String("version", d.Name()))
-			return nil, err
+		verPath := path.Join(pDir, v.Name(), "package.json")
+		var ver PackageVersion
+		if err := utils.ReadJSON(verPath, &ver); err != nil {
+			l.Error("failed to read package version data", zap.Error(err), zap.String("version", v.Name()))
+			continue
 		}
-		if latest == nil {
-			latest = data
-		}
-		latest = newer(latest, data)
-		versions = append(versions, data)
+		pkg.AddVersion(&ver)
 	}
-	raw["versions"] = versions
-	raw["latest"] = latest
-	return raw, nil
+
+	return pkg, nil
 }
 
-func newer(i, j map[string]any) map[string]any {
-	iTime := getPublishTime(i)
-	jTime := getPublishTime(j)
-	if iTime.After(jTime) {
-		return i
+func (p *Package) AddVersion(v *PackageVersion) {
+	p.Versions = append(p.Versions, v)
+	if p.Latest == nil || v.Published.After(p.Latest.Published) {
+		p.Latest = v
 	}
-	return j
 }
 
-func getPublishTime(meta map[string]any) time.Time {
-	defTime := time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
-	published, ok := meta["published"]
-	if !ok {
-		return defTime
-	}
-	pubStr, ok := published.(string)
-	if !ok {
-		return defTime
-	}
-	result, err := time.Parse(time.RFC3339, pubStr)
+func (p *Package) WriteMeta(pDir string) error {
+	metaJSON, err := json.MarshalIndent(p, "", "  ")
 	if err != nil {
-		return defTime
+		return err
 	}
-	return result
+	targetPath := path.Join(pDir, "listing.json")
+	return os.WriteFile(targetPath, metaJSON, filePermission)
 }

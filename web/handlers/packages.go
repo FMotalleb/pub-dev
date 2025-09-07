@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
@@ -30,21 +29,6 @@ const (
 
 var tempDirRoot = os.TempDir()
 
-type (
-	ListingResponse struct {
-		Name     string        `json:"name"`
-		Latest   ListingItem   `json:"latest"`
-		Versions []ListingItem `json:"versions"`
-	}
-	ListingItem struct {
-		ArchiveSHA256 string         `json:"archive_sha256"`
-		ArchiveURL    string         `json:"archive_url"`
-		PublishDate   string         `json:"published"`
-		Version       string         `json:"version"`
-		PubSpec       map[string]any `json:"pubspec"`
-	}
-)
-
 type NewUploadResponse struct {
 	URL    string            `json:"url"`
 	Fields map[string]string `json:"fields"`
@@ -60,7 +44,7 @@ func GetPackageInfo(ctx echo.Context) error {
 	}
 	listing := path.Join(cfg.PubStorage, p, "listing.json")
 
-	var raw ListingResponse
+	var raw pub.Package
 	err := utils.ReadJSONTemplate(listing, &raw, *cfg)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -144,8 +128,14 @@ func HandleFinalize(c echo.Context) error {
 		l.Error("failed to move package", zap.Error(err))
 		return c.String(http.StatusInternalServerError, "server error")
 	}
-	err = writeSpecData(spec, l, c, finalDir, finalPath)
+
+	version, err := createPackageVersion(spec, finalPath)
 	if err != nil {
+		l.Error("failed to create listing item", zap.Error(err))
+		return c.String(http.StatusInternalServerError, "server error")
+	}
+
+	if err = utils.WriteJSON(filepath.Join(finalDir, "package.json"), version); err != nil {
 		l.Error("failed to write spec data", zap.Error(err))
 		return c.JSON(http.StatusOK, map[string]any{
 			"error": map[string]any{
@@ -154,7 +144,17 @@ func HandleFinalize(c echo.Context) error {
 			},
 		})
 	}
-	pub.WritePackageMeta(c.Request().Context(), l, packageDir)
+
+	pkg, err := pub.ReadPackage(c.Request().Context(), packageDir)
+	if err != nil {
+		l.Error("failed to read package", zap.Error(err))
+		return c.String(http.StatusInternalServerError, "server error")
+	}
+
+	if err := pkg.WriteMeta(packageDir); err != nil {
+		l.Error("failed to write package metadata", zap.Error(err))
+		return c.String(http.StatusInternalServerError, "server error")
+	}
 
 	return c.JSON(http.StatusOK, map[string]any{
 		"success": map[string]string{
@@ -173,37 +173,28 @@ func generateTempID() string {
 	return hex.EncodeToString(b)
 }
 
-func writeSpecData(spec *pub.Spec, l *zap.Logger, c echo.Context, finalRoot string, finalPath string) error {
-	raw := new(ListingItem)
-	raw.PubSpec = spec.Raw
-	raw.Version = spec.Version
-	raw.ArchiveURL = "{{ .BaseURL }}" + path.Join("storage", "packages", spec.Name, spec.Version, "package.tar.gz")
-	data, err := os.ReadFile(finalPath)
+func createPackageVersion(spec *pub.Spec, packagePath string) (*pub.PackageVersion, error) {
+	hash, err := calculateSHA256(packagePath)
 	if err != nil {
-		return err
-	}
-	hash := sha256.Sum256(data)
-	hashString := hex.EncodeToString(hash[:])
-	raw.ArchiveSHA256 = hashString
-	raw.PublishDate = time.Now().Format(time.RFC3339)
-	specData, err := json.Marshal(raw)
-	if err != nil {
-		l.Error("failed to marshal spec data", zap.Error(err))
-		return c.String(http.StatusInternalServerError, "server error")
+		return nil, err
 	}
 
-	f, err := os.Create(path.Join(finalRoot, "package.json"))
+	return &pub.PackageVersion{
+		Pubspec:       spec.Raw,
+		Version:       spec.Version,
+		ArchiveURL:    "{{ .BaseURL }}" + path.Join("storage", "packages", spec.Name, spec.Version, "package.tar.gz"),
+		ArchiveSHA256: hash,
+		Published:     time.Now(),
+	}, nil
+}
+
+func calculateSHA256(filePath string) (string, error) {
+	data, err := os.ReadFile(filePath)
 	if err != nil {
-		l.Error("failed to open spec data file", zap.Error(err))
-		return c.String(http.StatusInternalServerError, "server error")
+		return "", err
 	}
-	defer f.Close()
-	_, err = f.Write(specData)
-	if err != nil {
-		l.Error("failed to write spec data file", zap.Error(err))
-		return c.String(http.StatusInternalServerError, "server error")
-	}
-	return nil
+	hash := sha256.Sum256(data)
+	return hex.EncodeToString(hash[:]), nil
 }
 
 func buildFinalizeURL(tempID, filename string) string {
@@ -225,6 +216,7 @@ func saveUploadedFile(src io.Reader, dstPath string) error {
 	return err
 }
 
+// copy and remove old file because the move is not working on cross device.
 func moveFile(srcPath, dstPath string) error {
 	src, err := os.Open(srcPath)
 	if err != nil {
@@ -244,6 +236,5 @@ func moveFile(srcPath, dstPath string) error {
 	if _, err := io.Copy(dst, src); err != nil {
 		return err
 	}
-	// on success we remove the whole temp directory
 	return os.RemoveAll(filepath.Dir(srcPath))
 }

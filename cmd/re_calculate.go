@@ -19,7 +19,7 @@ import (
 // reCalculateCmd represents the reCalculate command.
 var reCalculateCmd = &cobra.Command{
 	Use:   "re-calculate",
-	Short: "regenerates ",
+	Short: "regenerates metadata of pub packages",
 	RunE: func(cmd *cobra.Command, _ []string) error {
 		ctx := context.Background()
 		ctx = sysctx.CancelWith(ctx, os.Interrupt, os.Kill)

@@ -32,7 +32,7 @@ import (
 // rootCmd represents the base command when called without any subcommands.
 var rootCmd = &cobra.Command{
 	Use:     "pub-dev",
-	Short:   "A brief description of your application",
+	Short:   "A simple self hosted pub.dev backend",
 	Version: git.String(),
 	PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 		if verbose, err := cmd.Flags().GetBool("verbose"); err != nil {

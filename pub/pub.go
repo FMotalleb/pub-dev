@@ -27,25 +27,13 @@ func ParseSpec(content []byte) (*Spec, error) {
 	err := yaml.Unmarshal(content, raw)
 	spec := new(Spec)
 	var ok bool
-	if spec.Name, ok = getString(raw, "name"); !ok {
+
+	if spec.Name, ok = raw["name"].(string); !ok {
 		return nil, errors.New("invalid pubspec data: name")
 	}
-	if spec.Version, ok = getString(raw, "version"); !ok {
+	if spec.Version, ok = raw["version"].(string); !ok {
 		return nil, errors.New("invalid pubspec data: version")
 	}
 	spec.Raw = raw
 	return spec, err
-}
-
-func getString(src map[string]any, key string) (string, bool) {
-	var value any
-	var ok bool
-	if value, ok = src[key]; !ok {
-		return "", false
-	}
-	var str string
-	if str, ok = value.(string); !ok {
-		return "", false
-	}
-	return str, true
 }

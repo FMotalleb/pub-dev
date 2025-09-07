@@ -16,7 +16,7 @@ import (
 	"github.com/fmotalleb/pub-dev/pub"
 )
 
-// reCalculateCmd represents the reCalculate command
+// reCalculateCmd represents the reCalculate command.
 var reCalculateCmd = &cobra.Command{
 	Use:   "re-calculate",
 	Short: "regenerates ",

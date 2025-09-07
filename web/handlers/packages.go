@@ -23,7 +23,10 @@ import (
 	"github.com/fmotalleb/pub-dev/utils"
 )
 
-const directoryMakePermission = 0o755
+const (
+	directoryMakePermission = 0o755
+	tempRandSize            = 10
+)
 
 var tempDirRoot = os.TempDir()
 
@@ -160,7 +163,7 @@ func HandleFinalize(c echo.Context) error {
 // --- Helpers ---
 
 func generateTempID() string {
-	b := make([]byte, 5)
+	b := make([]byte, tempRandSize)
 	if _, err := rand.Read(b); err != nil {
 		return "random"
 	}
@@ -168,18 +171,18 @@ func generateTempID() string {
 }
 
 func writeSpecData(spec *pub.Spec, l *zap.Logger, c echo.Context, finalRoot string, finalPath string) error {
-	raw := make(map[string]any)
-	raw["pubspec"] = spec.Raw
-	raw["version"] = spec.Version
-	raw["archive_url"] = "{{ .BaseURL }}" + path.Join("storage", "packages", spec.Name, spec.Version, "package.tar.gz")
+	raw := new(ListingItem)
+	raw.PubSpec = spec.Raw
+	raw.Version = spec.Version
+	raw.ArchiveURL = "{{ .BaseURL }}" + path.Join("storage", "packages", spec.Name, spec.Version, "package.tar.gz")
 	data, err := os.ReadFile(finalPath)
 	if err != nil {
 		return err
 	}
 	hash := sha256.Sum256(data)
 	hashString := hex.EncodeToString(hash[:])
-	raw["archive_sha256"] = hashString
-	raw["published"] = time.Now().Format(time.RFC3339)
+	raw.ArchiveSHA256 = hashString
+	raw.PublishDate = time.Now().Format(time.RFC3339)
 	specData, err := json.Marshal(raw)
 	if err != nil {
 		l.Error("failed to marshal spec data", zap.Error(err))

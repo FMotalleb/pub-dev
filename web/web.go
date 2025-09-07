@@ -66,11 +66,7 @@ func checkAuth(c echo.Context, rules []config.AuthRule, path string) bool {
 	for _, r := range rules {
 		for _, bp := range r.BasePath {
 			if strings.HasPrefix(path, bp) {
-				if slices.Contains(r.Tokens, getBearer(c)) {
-					return true
-				} else {
-					return false
-				}
+				return slices.Contains(r.Tokens, getBearer(c))
 			}
 		}
 	}
@@ -78,9 +74,10 @@ func checkAuth(c echo.Context, rules []config.AuthRule, path string) bool {
 }
 
 func getBearer(c echo.Context) string {
+	headerParts := 2
 	header := c.Request().Header.Get("Authorization")
-	head := strings.SplitN(header, " ", 2)
-	if len(head) != 2 {
+	head := strings.SplitN(header, " ", headerParts)
+	if len(head) != headerParts {
 		return ""
 	}
 	if strings.ToLower(head[0]) != "bearer" {

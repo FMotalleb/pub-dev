@@ -4,9 +4,10 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/labstack/echo/v4"
+
 	"github.com/fmotalleb/pub-dev/config"
 	"github.com/fmotalleb/pub-dev/web/handlers"
-	"github.com/labstack/echo/v4"
 )
 
 func SetupRoutes(ctx context.Context, e *echo.Echo) {

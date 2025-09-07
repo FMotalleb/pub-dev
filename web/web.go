@@ -7,10 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/fmotalleb/pub-dev/config"
-	"github.com/fmotalleb/pub-dev/middleware/auth"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
+
+	"github.com/fmotalleb/pub-dev/config"
+	"github.com/fmotalleb/pub-dev/web/middleware/auth"
 )
 
 type Server struct {
@@ -45,6 +46,7 @@ func NewServer(ctx context.Context, cfg *config.Config) (*Server, error) {
 	SetupRoutes(ctx, server.Echo, cfg)
 	return server, nil
 }
+
 func (s *Server) Start() error {
 	if err := s.Echo.Start(s.cfg.HTTPListenAddr); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err

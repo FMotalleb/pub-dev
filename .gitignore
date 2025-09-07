@@ -39,3 +39,5 @@ dist/
 .env
 .envrc
 __*
+
+/storage/

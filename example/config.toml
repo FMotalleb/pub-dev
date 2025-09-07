@@ -6,5 +6,7 @@ path = [
   "/api/packages/versions/new",
 ]
 token = [
-  "hDwN3pH4C4ngDiBMRgQ3ghElr",
+  "bcrypt:$2a$10\\$um0Ts3R4oFERUb.eeQ6PruhcGvK8ETaXNdmz7TykclbpyR4dphNkK",
 ]
+# $2a$10$um0Ts3R4oFERUb.eeQ6PruhcGvK8ETaXNdmz7TykclbpyR4dphNkK
+# $2a$10.eeQ6PruhcGvK8ETaXNdmz7TykclbpyR4dphNkK

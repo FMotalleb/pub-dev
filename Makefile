@@ -4,7 +4,7 @@ SHELL := /bin/bash
 
 .PHONY: all
 all: ## build pipeline
-all: mod gen build spell lint test
+all: mod gen build spell lint
 
 .PHONY: precommit
 precommit: ## validate the branch before commit

@@ -10,8 +10,7 @@ import (
 	"github.com/fmotalleb/pub-dev/web/handlers"
 )
 
-func SetupRoutes(ctx context.Context, e *echo.Echo) {
-	cfg := config.GetForce(ctx)
+func SetupRoutes(ctx context.Context, e *echo.Echo, cfg *config.Config) {
 
 	// Root and static routes
 	e.GET("/", func(c echo.Context) error {

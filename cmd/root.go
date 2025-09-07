@@ -59,7 +59,7 @@ var rootCmd = &cobra.Command{
 			return err
 		}
 		ctx = config.Attach(ctx, cfg)
-		return service.Serve(ctx)
+		return service.Serve(ctx, cfg)
 	},
 }
 

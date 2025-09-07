@@ -61,7 +61,7 @@ The application is controlled via the `pub-dev` command.
 
 ## Configuration
 
-Configuration is managed through a TOML file.
+Configuration is managed through a TOML file, environment variables, or a `.env` file.
 
 **Example `config.toml`:**
 
@@ -74,7 +74,7 @@ http_listen = ":8080"
 base_url = "http://localhost:8080/"
 
 # The path to the directory where packages will be stored.
-storage = "./storage/packages"
+pub_storage = "./storage/pub"
 
 # Optional: Define authentication rules for specific API paths.
 [[auth]]
@@ -87,8 +87,10 @@ storage = "./storage/packages"
 ### Configuration Options
 
 -   `http_listen` (String): The TCP address for the server to listen on.
+    -   Env: `HTTP_LISTEN`
 -   `base_url` (String): The public URL for the server. This is critical as it's used to construct the `archive_url` for packages.
--   `storage` (String): The local filesystem path where packages will be stored.
+    -   Env: `BASE_URL`
+-   `pub_storage` (String): The local filesystem path where packages will be stored. Defaults to `./storage/pub`.
 -   `auth` (Array of Tables): Defines authentication rules.
     -   `path` (Array of Strings): A list of URL prefixes to protect.
     -   `token` (Array of Strings): A list of allowed bearer tokens for the specified paths.

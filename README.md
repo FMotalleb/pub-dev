@@ -1,152 +1,138 @@
-# Go Repository Template
+# pub-dev
 
-[![Keep a Changelog](https://img.shields.io/badge/changelog-Keep%20a%20Changelog-%23E05735)](CHANGELOG.md)
-[![Go Reference](https://pkg.go.dev/badge/github.com/fmotalleb/pub-dev.svg)](https://pkg.go.dev/github.com/fmotalleb/pub-dev)
-[![go.mod](https://img.shields.io/github/go-mod/go-version/golang-templates/seed)](go.mod)
-[![LICENSE](https://img.shields.io/github/license/golang-templates/seed)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/fmotalleb/pub-dev)](https://goreportcard.com/report/github.com/fmotalleb/pub-dev)
-[![Codecov](https://codecov.io/gh/golang-templates/seed/branch/main/graph/badge.svg)](https://codecov.io/gh/golang-templates/seed)
+A self-hosted Dart and Flutter package registry, written in Go. This server implements the [Dart Pub Repository Specification](https://github.com/dart-lang/pub/blob/master/doc/repository-spec-v2.md) and allows you to host your own private or public packages.
 
-⭐ `Star` this repository if you find it valuable and worth maintaining.
+## Features
 
-👁 `Watch` this repository to get notified about new releases, issues, etc.
+-   **Self-Hosted:** Host your own packages on your own infrastructure.
+-   **File-Based Storage:** Packages are stored directly on the filesystem, making it simple to manage and back up.
+-   **Authentication:** Secure your server with token-based authentication for package publishing.
+-   **CLI Tools:** Includes a command-line interface for server administration.
 
-## Description
+## Getting Started
 
-This is a GitHub repository template for a Go application.
-You can use it:
+### Prerequisites
 
-- to create a new repository with automation and environment setup,
-- as reference when improving automation for an existing repository.
+-   [Go](https://golang.org/dl/) (version 1.21 or later)
 
-It includes:
+### Building from source
 
-- continuous integration via [GitHub Actions](https://github.com/features/actions),
-- build automation via [Make](https://www.gnu.org/software/make),
-- dependency management using [Go Modules](https://github.com/golang/go/wiki/Modules),
-- code formatting using [gofumpt](https://github.com/mvdan/gofumpt),
-- linting with [golangci-lint](https://github.com/golangci/golangci-lint)
-  and [misspell](https://github.com/client9/misspell),
-- unit testing with
-  [race detector](https://blog.golang.org/race-detector),
-  code coverage [HTML report](https://blog.golang.org/cover)
-  and [Codecov report](https://codecov.io/),
-- releasing using [GoReleaser](https://github.com/goreleaser/goreleaser),
-- dependencies scanning and updating thanks to [Dependabot](https://dependabot.com),
-- security code analysis using [CodeQL Action](https://docs.github.com/en/github/finding-security-vulnerabilities-and-errors-in-your-code/about-code-scanning),
-  and [govulncheck](https://pkg.go.dev/golang.org/x/vuln/cmd/govulncheck),
-- [Visual Studio Code](https://code.visualstudio.com) configuration with [Go](https://code.visualstudio.com/docs/languages/go) support.
+1.  Clone the repository:
+    ```sh
+    git clone https://github.com/fmotalleb/pub-dev.git
+    cd pub-dev
+    ```
+
+2.  Build the binary:
+    ```sh
+    go build .
+    ```
 
 ## Usage
 
-1. Sign up on [Codecov](https://codecov.io/) and configure
-   [Codecov GitHub Application](https://github.com/apps/codecov).
-1. Click the `Use this template` button (alt. clone or download this repository).
-1. Replace all occurrences of `golang-templates/seed` to `your_org/repo_name` in all files.
-1. Replace all occurrences of `seed` to `repo_name` in [Dockerfile](Dockerfile).
-1. Follow [these](https://docs.codecov.com/docs/adding-the-codecov-token#github-actions)
-   instructions to add the `CODECOV_TOKEN` GitHub Actions and Dependabot secret.
-1. Update the following files:
-   - [CHANGELOG.md](CHANGELOG.md)
-   - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-   - [LICENSE](LICENSE)
-   - [README.md](README.md)
+### Running the Server
 
-## Setup
+To run the server, you need a configuration file. An example is provided in `example/config.toml`.
 
-Below you can find sample instructions on how to set up the development environment.
-Of course, you can use other tools like [GoLand](https://www.jetbrains.com/go/),
-[Vim](https://github.com/fatih/vim-go), [Emacs](https://github.com/dominikh/go-mode.el).
-However, take notice that the Visual Studio Go extension is
-[officially supported](https://blog.golang.org/vscode-go) by the Go team.
+```sh
+./pub-dev --config /path/to/your/config.toml
+```
 
-1. Install [Go](https://golang.org/doc/install).
-1. Install [Visual Studio Code](https://code.visualstudio.com/).
-1. Install [Go extension](https://code.visualstudio.com/docs/languages/go).
-1. Clone and open this repository.
-1. `F1` -> `Go: Install/Update Tools` -> (select all) -> OK.
+### Command-Line Interface
 
-## Build
+The application is controlled via the `pub-dev` command.
 
-### Terminal
+#### Global Flags
 
-- `make` - execute the build pipeline.
-- `make help` - print help for the [Make targets](Makefile).
+-   `-c`, `--config`: Path to the configuration file (default: `./config.toml`).
+-   `-v`, `--verbose`: Enable verbose output for debugging.
 
-### Visual Studio Code
+#### Commands
 
-`F1` → `Tasks: Run Build Task (Ctrl+Shift+B or ⇧⌘B)` to execute the build pipeline.
+-   **`run`** (default): Starts the pub server.
+    ```sh
+    ./pub-dev
+    ```
 
-## Release
+-   **`re-calculate`**: This command regenerates the `listing.json` metadata file for all packages within the storage directory. This is useful if the metadata files become corrupted or need to be recreated.
+    ```sh
+    ./pub-dev re-calculate -s /path/to/storage
+    ```
 
-The release workflow is triggered each time a tag with `v` prefix is pushed.
+## Configuration
 
-_CAUTION_: Make sure to understand the consequences before you bump the major version.
-More info: [Go Wiki](https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher),
-[Go Blog](https://blog.golang.org/v2-go-modules).
+Configuration is managed through a TOML file.
 
-## Maintenance
+**Example `config.toml`:**
 
-Notable files:
+```toml
+# The address and port the HTTP server will listen on.
+http_listen = ":8080"
 
-- [.github/workflows](.github/workflows) - GitHub Actions workflows,
-- [.github/dependabot.yml](.github/dependabot.yml) - Dependabot configuration,
-- [.vscode](.vscode) - Visual Studio Code configuration files,
-- [.golangci.yml](.golangci.yml) - golangci-lint configuration,
-- [.goreleaser.yml](.goreleaser.yml) - GoReleaser configuration,
-- [Dockerfile](Dockerfile) - Dockerfile used by GoReleaser to create a container image,
-- [Makefile](Makefile) - Make targets used for development, [CI build](.github/workflows) and [.vscode/tasks.json](.vscode/tasks.json),
+# The base URL of the server, used for generating package URLs.
+# This should be the public-facing URL.
+base_url = "http://localhost:8080/"
 
-## FAQ
+# The path to the directory where packages will be stored.
+storage = "./storage/packages"
 
-### Why Visual Studio Code editor configuration
+# Optional: Define authentication rules for specific API paths.
+[[auth]]
+  # A list of URL paths to protect.
+  path = ["/api/packages/versions/newUpload"]
+  # A list of valid bearer tokens for these paths.
+  token = ["your-secret-token-here"]
+```
 
-Developers that use Visual Studio Code can take advantage of the editor configuration.
-While others do not have to care about it.
-Setting configs for each repo is unnecessary time consuming.
-VS Code is the most popular Go editor ([survey](https://blog.golang.org/survey2019-results))
-and it is officially [supported by the Go team](https://blog.golang.org/vscode-go).
+### Configuration Options
 
-You can always remove the [.vscode](.vscode) directory if it really does not help you.
+-   `http_listen` (String): The TCP address for the server to listen on.
+-   `base_url` (String): The public URL for the server. This is critical as it's used to construct the `archive_url` for packages.
+-   `storage` (String): The local filesystem path where packages will be stored.
+-   `auth` (Array of Tables): Defines authentication rules.
+    -   `path` (Array of Strings): A list of URL prefixes to protect.
+    -   `token` (Array of Strings): A list of allowed bearer tokens for the specified paths.
 
-### Why GitHub Actions, not any other CI server
+## Publishing Packages
 
-GitHub Actions is out-of-the-box if you are already using GitHub.
-[Here](https://github.com/mvdan/github-actions-golang) you can learn how to use it for Go.
+To publish a package to your `pub-dev` server, you need to override the default pub server in your package's `pubspec.yaml`:
 
-However, changing to any other CI server should be very simple,
-because this repository has build logic and tooling installation in [Makefile](Makefile).
+```yaml
+name: my_awesome_package
+description: An awesome package.
+version: 1.0.0
 
-### How can I build on Windows
+environment:
+  sdk: '>=3.0.0 <4.0.0'
 
-Install [tdm-gcc](https://jmeubank.github.io/tdm-gcc/)
-and copy `C:\TDM-GCC-64\bin\mingw32-make.exe`
-to `C:\TDM-GCC-64\bin\make.exe`.
-Alternatively, you may install [mingw-w64](http://mingw-w64.org/doku.php)
-and copy `mingw32-make.exe` accordingly.
+# Add this section to publish to your private server
+publish_to: http://your-server-address:8080
 
-Take a look [here](https://github.com/docker-archive/toolbox/issues/673#issuecomment-355275054),
-if you have problems using Docker in Git Bash.
+dependencies:
+  flutter:
+    sdk: flutter
+```
 
-You can also use [WSL (Windows Subsystem for Linux)](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
-or develop inside a [Remote Container](https://code.visualstudio.com/docs/remote/containers).
-However, take into consideration that then you are not going to use "bare-metal" Windows.
+Then, you can publish it using the standard Dart or Flutter CLI. If you have authentication configured, you will need to set up authentication on your local machine.
 
-Consider using [goyek](https://github.com/goyek/goyek)
-for creating cross-platform build pipelines in Go.
+```sh
+# For Dart packages
+dart pub publish
 
-### How can I customize the release
+# For Flutter packages
+flutter pub publish
+```
 
-Take a look at GoReleaser [docs](https://goreleaser.com/customization/)
-as well as [its repo](https://github.com/goreleaser/goreleaser/)
-how it is dogfooding its functionality.
-You can use it to add deb/rpm/snap packages, Homebrew Tap, Scoop App Manifest etc.
+## API Endpoints
 
-If you are developing a library and you like handcrafted changelog and release notes,
-you are free to remove any usage of GoReleaser.
+The server exposes the following main API endpoints:
 
-## Contributing
+-   `GET /api/packages/:package`: Retrieves the metadata for a specific package.
+-   `GET /api/packages/versions/new`: Initiates the package upload process.
+-   `POST /api/packages/versions/newUpload`: Uploads the package `.tar.gz` archive.
+-   `GET /api/packages/versions/newUploadFinish`: Finalizes the upload.
+-   `GET /storage/packages/...`: Serves the package `.tar.gz` files.
 
-Feel free to create an issue or propose a pull request.
+## License
 
-Follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.

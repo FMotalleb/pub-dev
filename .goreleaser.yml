@@ -26,10 +26,10 @@ archives:
           - zip
 dockers:
   - image_templates:
-    - "ghcr.io/FMotalleb/pub-dev:latest"
-    - "ghcr.io/FMotalleb/pub-dev:{{ .Major }}"
-    - "ghcr.io/FMotalleb/pub-dev:{{ .Major }}.{{ .Minor }}"
-    - "ghcr.io/FMotalleb/pub-dev:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+    - "ghcr.io/fmotalleb/pub-dev:latest"
+    - "ghcr.io/fmotalleb/pub-dev:{{ .Major }}"
+    - "ghcr.io/fmotalleb/pub-dev:{{ .Major }}.{{ .Minor }}"
+    - "ghcr.io/fmotalleb/pub-dev:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
     build_flag_templates:
     - "--pull"
     # OCI annotations: https://github.com/opencontainers/image-spec/blob/main/annotations.md

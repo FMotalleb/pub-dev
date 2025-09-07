@@ -1,4 +1,4 @@
-package packages
+package handlers
 
 import (
 	"crypto/rand"
@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/fmotalleb/go-tools/log"
@@ -19,27 +20,53 @@ import (
 
 	"github.com/fmotalleb/pub-dev/config"
 	"github.com/fmotalleb/pub-dev/pub"
+	"github.com/fmotalleb/pub-dev/utils"
 )
 
 const directoryMakePermission = 0o755
 
 var tempDirRoot = os.TempDir()
 
-func init() {
-	RegisterEndpoint(func(g *echo.Group) {
-		// TODO: add authorization middleware
-		g.GET("versions/new", handleNewUpload)
-		g.POST("versions/newUpload", handleUpload)
-		g.GET("versions/newUploadFinish", handleFinalize)
-	})
-}
+type (
+	ListingResponse struct {
+		Name     string        `json:"name"`
+		Latest   ListingItem   `json:"latest"`
+		Versions []ListingItem `json:"versions"`
+	}
+	ListingItem struct {
+		ArchiveSHA256 string         `json:"archive_sha256"`
+		ArchiveURL    string         `json:"archive_url"`
+		PublishDate   string         `json:"published"`
+		Version       string         `json:"version"`
+		PubSpec       map[string]any `json:"pubspec"`
+	}
+)
 
 type NewUploadResponse struct {
 	URL    string            `json:"url"`
 	Fields map[string]string `json:"fields"`
 }
 
-func handleNewUpload(ctx echo.Context) error {
+func GetPackageInfo(ctx echo.Context) error {
+	cfg := config.GetForce(ctx.Request().Context())
+	l := log.Of(ctx.Request().Context())
+	p := ctx.Param("package")
+	p = strings.Trim(p, "/ :-")
+	if p == "" {
+		return ctx.String(http.StatusNotFound, "package name is empty")
+	}
+	listing := path.Join(cfg.StoragePath, p, "listing.json")
+
+	var raw ListingResponse
+	err := utils.ReadJSONTemplate(listing, &raw, *cfg)
+	if err != nil {
+		l.Error("failed to parse json for package", zap.String("path", listing), zap.Error(err))
+		return ctx.String(http.StatusInternalServerError, "internal server error")
+	}
+	return ctx.JSON(http.StatusOK, raw)
+}
+
+func HandleNewUpload(ctx echo.Context) error {
 	cfg := config.GetForce(ctx.Request().Context())
 	return ctx.JSON(http.StatusOK, NewUploadResponse{
 		URL:    cfg.BaseURL + "api/packages/versions/newUpload",
@@ -47,7 +74,7 @@ func handleNewUpload(ctx echo.Context) error {
 	})
 }
 
-func handleUpload(c echo.Context) error {
+func HandleUpload(c echo.Context) error {
 	l := log.Of(c.Request().Context()).Named("upload")
 
 	randID := generateTempID()
@@ -80,7 +107,7 @@ func handleUpload(c echo.Context) error {
 	return c.Redirect(http.StatusFound, cfg.BaseURL+redirectURL)
 }
 
-func handleFinalize(c echo.Context) error {
+func HandleFinalize(c echo.Context) error {
 	l := log.Of(c.Request().Context()).Named("finalize")
 	randID := c.QueryParam("temp")
 	name := c.QueryParam("name")
@@ -133,7 +160,11 @@ func handleFinalize(c echo.Context) error {
 // --- Helpers ---
 
 func generateTempID() string {
-	return rand.Text()[0:10]
+	b := make([]byte, 5)
+	if _, err := rand.Read(b); err != nil {
+		return "random"
+	}
+	return hex.EncodeToString(b)
 }
 
 func writeSpecData(spec *pub.Spec, l *zap.Logger, c echo.Context, finalRoot string, finalPath string) error {
@@ -160,6 +191,7 @@ func writeSpecData(spec *pub.Spec, l *zap.Logger, c echo.Context, finalRoot stri
 		l.Error("failed to open spec data file", zap.Error(err))
 		return c.String(http.StatusInternalServerError, "server error")
 	}
+	defer f.Close()
 	_, err = f.Write(specData)
 	if err != nil {
 		l.Error("failed to write spec data file", zap.Error(err))
@@ -206,5 +238,6 @@ func moveFile(srcPath, dstPath string) error {
 	if _, err := io.Copy(dst, src); err != nil {
 		return err
 	}
-	return os.Remove(srcPath)
+	// on success we remove the whole temp directory
+	return os.RemoveAll(filepath.Dir(srcPath))
 }

@@ -15,22 +15,6 @@ import (
 	"github.com/fmotalleb/pub-dev/config"
 )
 
-var (
-	routes = make([]func(context.Context, *echo.Echo), 0)
-	server = echo.New()
-)
-
-func RegisterEndpoint(register func(context.Context, *echo.Echo)) {
-	routes = append(routes, register)
-}
-
-func init() {
-	server.Use(
-		middleware.Logger(),
-		middleware.Recover(),
-	)
-}
-
 func Start(ctx context.Context) error {
 	cfg, err := config.Get(ctx)
 	if err != nil {
@@ -40,6 +24,7 @@ func Start(ctx context.Context) error {
 		return errors.New("`http_listen` is not set")
 	}
 
+	server := echo.New()
 	server.Server = &http.Server{
 		ReadTimeout:       time.Minute,
 		ReadHeaderTimeout: time.Minute,
@@ -49,10 +34,15 @@ func Start(ctx context.Context) error {
 			return ctx
 		},
 	}
-	server.Use(authMiddleware(cfg.Auth))
-	for _, r := range routes {
-		r(ctx, server)
-	}
+
+	server.Use(
+		middleware.Logger(),
+		middleware.Recover(),
+		authMiddleware(cfg.Auth),
+	)
+
+	SetupRoutes(ctx, server)
+
 	if err := server.Start(cfg.HTTPListenAddr); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return err
 	}

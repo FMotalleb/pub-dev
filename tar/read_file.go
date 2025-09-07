@@ -12,7 +12,7 @@ func ReadFile(tarGzPath, targetFile string) ([]byte, error) {
 	// Open the tar.gz file
 	f, err := os.Open(tarGzPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open tar.gz: %w", err)
+		return nil, err
 	}
 	defer f.Close()
 

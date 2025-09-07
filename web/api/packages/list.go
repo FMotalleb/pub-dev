@@ -1,15 +1,17 @@
 package packages
 
 import (
-	"encoding/json"
 	"net/http"
-	"os"
 	"path"
 	"strings"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
+
+	"github.com/fmotalleb/go-tools/log"
 
 	"github.com/fmotalleb/pub-dev/config"
+	"github.com/fmotalleb/pub-dev/utils"
 )
 
 func init() {
@@ -21,37 +23,34 @@ func init() {
 
 func getPackageInfo(ctx echo.Context) error {
 	cfg := config.GetForce(ctx.Request().Context())
-	var err error
-	var directories []os.DirEntry
+	l := log.Of(ctx.Request().Context())
 	p := ctx.Param("package")
 	p = strings.Trim(p, "/ :-")
 	if p == "" {
 		return ctx.String(http.StatusNotFound, "package name is empty")
 	}
-	pDir := path.Join(cfg.StoragePath, p)
-	if directories, err = os.ReadDir(pDir); err != nil {
-		return ctx.String(http.StatusNotFound, "package not found")
+	listing := path.Join(cfg.StoragePath, p, "listing.json")
+
+	var raw ListingResponse
+	err := utils.ReadJSONTemplate(listing, &raw, *cfg)
+	if err != nil {
+		l.Error("failed to parse json for package", zap.String("path", listing), zap.Error(err))
+		return ctx.String(http.StatusInternalServerError, "internal server error")
 	}
-	raw := make(map[string]any, 3)
-	raw["name"] = p
-	versions := make([]map[string]any, len(directories))
-	for i, d := range directories {
-		verData := path.Join(pDir, d.Name(), "package.json")
-		if err := readToJson(verData, &versions[i]); err != nil {
-			return ctx.String(http.StatusInternalServerError, "package version issue found")
-		}
-	}
-	raw["versions"] = versions
-	raw["latest"] = versions[len(versions)-1]
-	// raw["latest"]
 	return ctx.JSON(http.StatusOK, raw)
 }
 
-func readToJson(path string, dst *map[string]any) error {
-	content, err := os.ReadFile(path)
-	if err != nil {
-		return err
+type (
+	ListingResponse struct {
+		Name     string        `json:"name"`
+		Latest   ListingItem   `json:"latest"`
+		Versions []ListingItem `json:"versions"`
 	}
-	err = json.Unmarshal(content, dst)
-	return err
-}
+	ListingItem struct {
+		ArchiveSHA256 string         `json:"archive_sha256"`
+		ArchiveURL    string         `json:"archive_url"`
+		PublishDate   string         `json:"published"`
+		Version       string         `json:"version"`
+		PubSpec       map[string]any `json:"pubspec"`
+	}
+)

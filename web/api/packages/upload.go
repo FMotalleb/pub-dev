@@ -98,23 +98,39 @@ func handleFinalize(c echo.Context) error {
 	}
 
 	cfg := config.GetForce(c.Request().Context())
-	finalRoot := filepath.Join(cfg.StoragePath, spec.Name, spec.Version)
+	packageDir := filepath.Join(cfg.StoragePath, spec.Name)
+	finalDir := filepath.Join(packageDir, spec.Version)
 
-	if err = os.MkdirAll(finalRoot, directoryMakePermission); err != nil {
+	if err = os.MkdirAll(finalDir, directoryMakePermission); err != nil {
 		l.Error("failed to create final directory", zap.Error(err))
 		return c.String(http.StatusInternalServerError, "server error")
 	}
 
-	finalPath := filepath.Join(finalRoot, "package.tar.gz")
+	finalPath := filepath.Join(finalDir, "package.tar.gz")
 	if err = moveFile(tempPath, finalPath); err != nil {
 		l.Error("failed to move package", zap.Error(err))
 		return c.String(http.StatusInternalServerError, "server error")
 	}
-	err = writeSpecData(spec, l, c, finalRoot, finalPath)
+	err = writeSpecData(spec, l, c, finalDir, finalPath)
 	if err != nil {
-		return err
+		l.Error("failed to write spec data", zap.Error(err))
+		return c.JSON(http.StatusOK, map[string]any{
+			"error": map[string]any{
+				"code":    1,
+				"message": "failed to generate spec data",
+			},
+		})
 	}
-
+	err = pub.RecalculateMetadata(c.Request().Context(), packageDir)
+	if err != nil {
+		l.Error("failed to generate package listing data", zap.Error(err))
+		return c.JSON(http.StatusOK, map[string]any{
+			"error": map[string]any{
+				"code":    2,
+				"message": "failed to generate package listing data",
+			},
+		})
+	}
 	return c.JSON(http.StatusOK, map[string]any{
 		"success": map[string]string{
 			"message": "package published successfully",
@@ -129,11 +145,10 @@ func generateTempID() string {
 }
 
 func writeSpecData(spec *pub.Spec, l *zap.Logger, c echo.Context, finalRoot string, finalPath string) error {
-	cfg := config.GetForce(c.Request().Context())
 	raw := make(map[string]any)
 	raw["pubspec"] = spec.Raw
 	raw["version"] = spec.Version
-	raw["archive_url"] = cfg.BaseURL + path.Join("storage", "packages", spec.Name, spec.Version, "package.tar.gz")
+	raw["archive_url"] = "{{ .BaseURL }}" + path.Join("storage", "packages", spec.Name, spec.Version, "package.tar.gz")
 	data, err := os.ReadFile(finalPath)
 	if err != nil {
 		return err

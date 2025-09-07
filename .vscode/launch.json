@@ -12,7 +12,8 @@
             "program": "${workspaceFolder}",
             "env": {},
             "args": [
-                "--config=example/config.toml"
+                "--config=example/config.toml",
+                "-v"
             ]
         }
     ]

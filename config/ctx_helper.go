@@ -30,3 +30,14 @@ func Get(ctx context.Context) (*Config, error) {
 	}
 	return nil, ErrorConfigMissMatch
 }
+
+func GetForce(ctx context.Context) *Config {
+	var v any
+	if v = ctx.Value(configKey); v == nil {
+		panic(ErrorNoConfigFound)
+	}
+	if cfg, ok := v.(*Config); ok {
+		return cfg
+	}
+	panic(ErrorConfigMissMatch)
+}

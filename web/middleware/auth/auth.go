@@ -59,9 +59,11 @@ func getBearer(c echo.Context) string {
 	return head[1]
 }
 
+const authHeaderParts = 2
+
 func getMatcher(matcher string) func(string) bool {
-	parts := strings.SplitN(matcher, ":", 2)
-	if len(parts) != 2 {
+	parts := strings.SplitN(matcher, ":", authHeaderParts)
+	if len(parts) != authHeaderParts {
 		// No type prefix, fallback to simple equality
 		return func(in string) bool {
 			return matcher == in

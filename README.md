@@ -15,6 +15,16 @@ A minimalistic self-hosted Dart and Flutter package registry, written in Go. Thi
 
 - [Go](https://golang.org/dl/) (version 1.21 or later)
 
+### Installation
+
+You can install `pub-dev` using `go install`:
+
+```sh
+go install github.com/fmotalleb/pub-dev@latest
+```
+
+This will install the `pub-dev` binary in your Go bin directory.
+
 ### Building from source
 
 1. Clone the repository:
@@ -61,6 +71,13 @@ The application is controlled via the `pub-dev` command.
  ./pub-dev re-calculate -s /path/to/storage
  ```
 
+- **`token`**: Generates a secure token and its corresponding hash for use in authentication. The output includes the client token (to be used by the client) and the server-side hash to be added to the configuration file.
+  - `--kind`: The hash format (`bcrypt` or `sha256`). Default is `bcrypt`.
+  - `--length`: The length of the generated token. Default is 32.
+```sh
+./pub-dev token --kind bcrypt
+```
+
 ## Configuration
 
 Configuration is managed through a TOML file, environment variables, or a `.env` file.
@@ -82,20 +99,22 @@ pub_storage = "./storage/pub"
 [[auth]]
  # A list of URL paths to protect.
  path = ["/api/packages/versions/newUpload"]
- # A list of valid bearer tokens for these paths.
- token = ["your-secret-token-here"]
+ # A list of valid tokens for these paths.
+ # Use the `token` command to generate a token and its hash.
+ # The value should be the "server hash" output from the command.
+ token = ["bcrypt:$2a$10$...."]
 ```
 
 ### Configuration Options
 
 - `http_listen` (String): The TCP address for the server to listen on.
- - Env: `HTTP_LISTEN`
+  - Env: `HTTP_LISTEN`
 - `base_url` (String): The public URL for the server. This is critical as it's used to construct the `archive_url` for packages.
- - Env: `BASE_URL`
+  - Env: `BASE_URL`
 - `pub_storage` (String): The local filesystem path where packages will be stored. Defaults to `./storage/pub`.
 - `auth` (Array of Tables): Defines authentication rules.
- - `path` (Array of Strings): A list of URL prefixes to protect.
- - `token` (Array of Strings): A list of allowed bearer tokens for the specified paths.
+  - `path` (Array of Strings): A list of URL prefixes to protect.
+  - `token` (Array of Strings): A list of allowed tokens for the specified paths. The value should be the "server hash" output from the `token` command (e.g., `bcrypt:<hash>`).
 
 ## Publishing Packages
 

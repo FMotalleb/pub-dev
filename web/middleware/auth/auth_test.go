@@ -5,10 +5,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/fmotalleb/pub-dev/config"
-	"github.com/fmotalleb/pub-dev/middleware/auth"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/fmotalleb/pub-dev/config"
+	"github.com/fmotalleb/pub-dev/web/middleware/auth"
 )
 
 func TestMiddleware(t *testing.T) {

@@ -1,6 +1,6 @@
 # pub-dev
 
-A self-hosted Dart and Flutter package registry, written in Go. This server implements the [Dart Pub Repository Specification](https://github.com/dart-lang/pub/blob/master/doc/repository-spec-v2.md) and allows you to host your own private or public packages.
+A minimalistic self-hosted Dart and Flutter package registry, written in Go. This server implements the [Dart Pub Repository Specification](https://github.com/dart-lang/pub/blob/master/doc/repository-spec-v2.md) (only parts needed for publish and downloading a package) and allows you to host your own private or public packages.
 
 ## Features
 

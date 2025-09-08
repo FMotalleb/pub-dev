@@ -15,7 +15,7 @@ import (
 func Middleware(rules []config.AuthRule) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			path := c.Path()
+			path := c.Request().URL.Path
 			if !checkAuth(c, rules, path) {
 				c.Response().Header().Add("WWW-Authenticate", `Bearer realm="pub", message="Obtain a token from administrator"`)
 				return c.String(http.StatusUnauthorized, "unauthorized")

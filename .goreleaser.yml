@@ -13,10 +13,10 @@ builds:
     ldflags:
       - "-s"
       - "-w"
-      - "-X github.com/FMotalleb/go-tools/git.Version={{.Version}}"
-      - "-X github.com/FMotalleb/go-tools/git.Commit={{.ShortCommit}}"
-      - "-X github.com/FMotalleb/go-tools/git.Date={{.Date}}"
-      - "-X github.com/FMotalleb/go-tools/git.Branch={{.Branch}}"
+      - "-X github.com/fmotalleb/go-tools/git.Version={{.Version}}"
+      - "-X github.com/fmotalleb/go-tools/git.Commit={{.ShortCommit}}"
+      - "-X github.com/fmotalleb/go-tools/git.Date={{.Date}}"
+      - "-X github.com/fmotalleb/go-tools/git.Branch={{.Branch}}"
     goarch:
       - amd64
 archives:
@@ -24,20 +24,25 @@ archives:
       - goos: windows
         formats: 
           - zip
-dockers:
-  - image_templates:
-    - "ghcr.io/fmotalleb/pub-dev:latest"
-    - "ghcr.io/fmotalleb/pub-dev:{{ .Major }}"
-    - "ghcr.io/fmotalleb/pub-dev:{{ .Major }}.{{ .Minor }}"
-    - "ghcr.io/fmotalleb/pub-dev:{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
-    build_flag_templates:
-    - "--pull"
-    # OCI annotations: https://github.com/opencontainers/image-spec/blob/main/annotations.md
-    - "--label=org.opencontainers.image.created={{.Date}}"
-    - "--label=org.opencontainers.image.name={{.ProjectName}}"
-    - "--label=org.opencontainers.image.revision={{.FullCommit}}"
-    - "--label=org.opencontainers.image.version={{.Version}}"
-    - "--label=org.opencontainers.image.source={{.GitURL}}"
+
+dockers_v2:
+  - images:
+      - "ghcr.io/fmotalleb/pub-dev"
+    tags:
+      - "{{ .Major }}"
+      - "{{ .Major }}.{{ .Minor }}"
+      - "{{ .Major }}.{{ .Minor }}.{{ .Patch }}"
+      - "{{ if .IsNightly }}nightly{{ end }}"
+      - "{{ if not .IsNightly }}latest{{ end }}"
+    
+    labels:
+      # OCI annotations: https://github.com/opencontainers/image-spec/blob/main/annotations.md
+      org.opencontainers.image.created: "{{.Date}}"
+      org.opencontainers.image.name: "{{.ProjectName}}"
+      org.opencontainers.image.revision: "{{.FullCommit}}"
+      org.opencontainers.image.version: "{{.Version}}"
+      org.opencontainers.image.source: "{{.GitURL}}"
+
 release:
   github:
     owner: FMotalleb

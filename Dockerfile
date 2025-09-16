@@ -1,3 +1,4 @@
 FROM scratch
-COPY pub-dev /
+ARG TARGETPLATFORM
+COPY $TARGETPLATFORM/pub-dev /
 ENTRYPOINT ["/pub-dev"]

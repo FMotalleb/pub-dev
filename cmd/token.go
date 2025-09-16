@@ -41,7 +41,7 @@ var tokenCmd = &cobra.Command{
 		if matcher, err = generateHash(kind, token); err != nil {
 			return err
 		}
-		matcher = strings.ReplaceAll(matcher, "$", "\\\\$")
+		matcher = strings.ReplaceAll(matcher, "$", "$$")
 		fmt.Fprintf(os.Stdout, "client token:`%s`\n", token)
 		fmt.Fprintf(os.Stdout, "server hash:`%s:%s`\n", kind, matcher)
 		return nil
